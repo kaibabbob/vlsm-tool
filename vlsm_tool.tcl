@@ -3,6 +3,7 @@
 # V0.1 6/15/99 DRR
 # V0.2 1/01 DRR Fixed address display bug 
 # V1.1 5/03 DRR Added many exciting new features: navigation,
+# V1.3 9/16 DRR porting to MAC
 
 # The following is the list of procedures contained in this script in the order they are found.
 # The main code is found at the end of the procedures.
@@ -42,7 +43,7 @@
 #
 proc Initialize {} {
  global network address aggregates row_offset col_offset min_mask network_mask max_mask
- global label_count
+ global label_count top
 
 	set network 192.168.0.0
 	set address {}
@@ -53,19 +54,18 @@ proc Initialize {} {
 	set network_mask 25
 	set max_mask 30
 	set label_count 0
+	set top .top
 }
 
 #------------------------------------------------------------
 #
 #
 proc Build_GUI {} {
- global network min_mask base_address
-
-	table .
+ global network min_mask base_address top  
 
 	set row_height .15i
 	for {set x 5} {$x < 44} {incr x} {
-		table configure . R$x -height $row_height
+		grid rowconfigure . $x -minsize $row_height
 	}
 
 
@@ -91,6 +91,7 @@ proc Build_GUI {} {
 	        -yscrollcommand {.aggrysbar set}
 	scrollbar .aggrysbar -orient vertical  -command {.aggr yview}
 
+# here
 	radiobox_create .aggr_controls ""
 
 	radiobox_add .aggr_controls "Strict Aggregation" {
@@ -106,20 +107,20 @@ proc Build_GUI {} {
 		set aggr_type none
 	}
 
-	button .clear -bg red -text CLEAR -command "Cleanup selections" -relief raised \
-	              -borderwidth 5 -pady 4 -padx 4
+	button .clear -bg grey -text CLEAR -command "Cleanup selections" -relief raised \
+	              -borderwidth 5 -pady 4 -padx 4 -width 8
 
 	button .display -bg green -text DISPLAY -command Update -relief raised \
-			-borderwidth 5 -pady 4 -padx 4
+			-borderwidth 5 -pady 4 -padx 4  -width 8
 
 	button .help -bg green -text HELP -command {} -relief raised \
-			-borderwidth 5 -pady 4 -padx 4
+			-borderwidth 5 -pady 4 -padx 4 -width 8
 
 	button .import -bg green -text IMPORT -command {} -relief raised \
-			-borderwidth 5 -pady 4 -padx 4
+			-borderwidth 5 -pady 4 -padx 4 -width 8
 
 	button .exit -bg red -text EXIT -command exit -relief raised \
-			-borderwidth 5 -pady 4 -padx 4
+			-borderwidth 5 -pady 4 -padx 4 -width 8
 
 	label .stats -text "Statistics"
 	for {set x 0} {$x <= 30 } {incr x} {
@@ -139,36 +140,32 @@ proc Build_GUI {} {
 	label .host_cnt_label -text "Hosts/Subnet" -borderwidth 0
 
 
-	table . \
-			.title    			0,0 -columnspan 2 \
-			.network_address_id 1,0 \
-			.network_mask_id    1,1 \
-			.network_address    2,0 \
-			.network_mask       2,1 
+	grid  .title    			-row 0 -column 0 -columnspan 2 
+	grid	.network_address_id -row 1 -column 0 
+	grid 	.network_mask_id    -row 1 -column 1
+	grid 	.network_address    -row 2 -column 0
+	grid 	.network_mask       -row 2 -column 1 
  
-	table . \
-			.selected_subnets_label 3,0 -pady 0 \
-			.selected_subnets  		4,0  -rowspan 16 -anchor n -fill both \
-			.ysbar 			   		4,1  -rowspan 16 -anchor w -fill y \
-			.aggr_label             21,0 -rowspan 3 -anchor s \
-			.aggr 			        24,0 -rowspan 10 -anchor n -fill both \
-			.aggrysbar         		24,1 -rowspan 10 -anchor w -fill y \
-			.aggr_controls          24,2 -rowspan 8 -anchor n
+	grid	.selected_subnets_label -row 3 -column 0 -pady 0 
+	grid	.selected_subnets  		-row 4 -column 0  -rowspan 16 -sticky nsew
+	grid	.ysbar 			   		-row 4 -column 1  -rowspan 16  -sticky ew
+	grid	.aggr_label             -row 21 -column 0 -rowspan 3  -sticky s
+	grid	.aggr 			        -row 24 -column 0 -rowspan 10  -sticky nsew
+	grid	.aggrysbar         		-row 24 -column 1 -rowspan 10  -sticky ew
+	grid	.aggr_controls          -row 24 -column 2 -rowspan 8  -sticky n
 
-	table . \
-			.stats          5,2 -rowspan 2 \
-			.total_hosts_id 7,2  \
-			.total_hosts    8,2  \
-			.total_nets_id  10,2  \
-			.total_nets     11,2 
+	grid	.stats          -row 5 -column 2 -rowspan 2 
+	grid	.total_hosts_id -row 7 -column 2  
+	grid	.total_hosts    -row 8 -column 2 
+	grid	.total_nets_id  -row 10 -column 2 
+	grid	.total_nets     -row 11 -column 2 
 
 
-	table . \
-			.import  35,0 -rowspan 8 -columnspan 1 -anchor n -pady 3 \
-			.display 35,1 -rowspan 8 -columnspan 1 -anchor n -pady 3 \
-			.help	 35,2 -rowspan 8 -columnspan 1 -anchor n -pady 3 \
-			.clear   35,0 -rowspan 8 -columnspan 1 -anchor s -pady 3 \
-			.exit	 35,1 -rowspan 8 -columnspan 1 -anchor s -pady 3
+	grid	.import  -row 35 -column 0 -rowspan 1 -columnspan 1 -sticky n -pady 3
+	grid	.display -row 35 -column 1 -rowspan 8 -columnspan 1 -sticky n -pady 3
+	grid	.help	 -row 35 -column 2 -rowspan 8 -columnspan 1 -sticky n -pady 3
+	grid	.clear   -row 35 -column 0 -rowspan 8 -columnspan 1 -sticky s -pady 3
+	grid	.exit	 -row 35 -column 1 -rowspan 8 -columnspan 1 -sticky s -pady 3
 
 	Create_Navigation
 
@@ -356,7 +353,7 @@ proc Cleanup {type} {
   global row_offset
   global col_offset
   global network
-  global address
+  global addresss
   global aggregates
   global network_mask
   global max_mask
@@ -365,9 +362,10 @@ proc Cleanup {type} {
 	for {set col $network_mask} {$col <= 30} {incr col} {
 
 		set subnets [expr 1 << ($col - $network_mask)]
-		if {[table search . -pattern .stats_${col}_id] != ""} {table forget .stats_${col}_id}
-		if {[table search . -pattern .stats_$col] != ""} {table forget .stats_$col }
-		if {[table search . -pattern .stats_${col}_hosts] != ""} {table forget .stats_${col}_hosts }
+
+		if {[lsearch [grid slaves .] [subst {.stats_${col}_id}]]} {grid forget .stats_${col}_id}
+		if {[lsearch [grid slaves .] [subst {.stats_$col}]] } {grid forget .stats_$col }
+		if {[lsearch [grid slaves .] [subst {.stats_${col}_hosts}]]} {grid forget .stats_${col}_hosts }
 
 		if {$subnets > 256} {
 			set max_row 256
@@ -382,27 +380,27 @@ proc Cleanup {type} {
 	}
 
 
-	if {[table search . -pattern .prefix_label] != ""} {
-	    table forget .prefix_label
-   	 	table forget .sel_count_label
-    	table forget .host_cnt_label
+	if {[lsearch [grid slaves .] .prefix_label]} {
+	    grid forget .prefix_label
+   	 	grid forget .sel_count_label
+    	grid forget .host_cnt_label
 	}
-	if {[table search . -pattern .larger_mask] != ""} {
- 		table forget .larger_mask
-		table forget .smaller_mask_0 
-		table forget .smaller_mask_1 
+	if {[lsearch [grid slaves .] .larger_mask] } {
+ 		grid forget .larger_mask
+		grid forget .smaller_mask_0 
+		grid forget .smaller_mask_1 
 	}
 
 
-	if {[table search . -pattern .scrollup] != ""} {
-		table forget .scrollup
-		table forget .scrolldn
+	if {[lsearch [grid slaves .] .scrollup] } {
+		grid forget .scrollup
+		grid forget .scrolldn
 	}
 
 	for {set x 0} {$x < 6} {incr x} {
-		if {[table search . -pattern .scrollup-$x] != ""} {
-			table forget .scrollup-$x
-			table forget .scrolldn-$x
+		if {[lsearch [grid slaves .] [subst {.scrollup-$x}]]} {
+			grid forget .scrollup-$x
+			grid forget .scrolldn-$x
 		}
 	}	
 
@@ -568,16 +566,15 @@ global max_mask button_col
 	set scrolling_row [expr $row_offset + 2 + (1 << ($max_mask - $min_mask))]
 
 
-	table . \
-			.larger_mask    [expr $row_offset -2],[expr $col_offset -2] -anchor w\
-			.jumpup		[expr $row_offset -3],[expr $col_offset -2] -anchor n\
-			.jumpdn		[expr $row_offset -1],[expr $col_offset -2] -anchor s\
-			.smaller_mask_0 [expr $row_offset -3],[expr $col_offset -1] -anchor e \
-			.smaller_mask_1 [expr $row_offset -1],[expr $col_offset -1] -anchor e
+	grid	.larger_mask    -row [expr $row_offset -2] -column [expr $col_offset -2] -sticky w
+	grid	.jumpup		-row [expr $row_offset -3] -column [expr $col_offset -2] -sticky n
+	grid	.jumpdn		-row [expr $row_offset -1] -column [expr $col_offset -2] -sticky s
+	grid	.smaller_mask_0 -row [expr $row_offset -3] -column [expr $col_offset -1] -sticky e
+	grid	.smaller_mask_1 -row [expr $row_offset -1] -column [expr $col_offset -1] -sticky e
 
-#	table . \
-#			.scrollup $scrolling_row,[expr $col_offset -1] -anchor w \
-#			.scrolldn [expr $scrolling_row + 1],[expr $col_offset -1] -anchor w 
+#  this was from new feature testing
+#	grid	.scrollup -row $scrolling_row -column [expr $col_offset -1] -sticky w 
+#	grid	.scrolldn -row [expr $scrolling_row + 1] -column [expr $col_offset -1] -sticky w 
 
 	set scrolling_col [expr $col_offset] 
 	set mask_length $min_mask
@@ -585,9 +582,8 @@ global max_mask button_col
 	for {set x 0} {$x <= ($max_mask - $min_mask )} {incr x} {
 #		.scrollup-$x configure -command "Scroll-Up $mask_length"
 #		.scrolldn-$x configure -command "Scroll-Dn $mask_length"
-#		table . \
-#			.scrollup-$x $scrolling_row,$scrolling_col -fill both \
-#			.scrolldn-$x [expr $scrolling_row + 1],$scrolling_col -fill both 
+#		grid .scrollup-$x -row $scrolling_row -column $scrolling_col -sticky nsew
+#		grid .scrolldn-$x -row expr $scrolling_row + 1] -column $scrolling_col -sticky nsew 
 
 		incr mask_length
 		incr scrolling_col
@@ -731,31 +727,28 @@ proc Label_Subnets {} {
 	set label_count 0
 	set subnets [expr 1 << ($max_mask - $min_mask)]
 
-	set button_info  [table info . .view]
+	set button_info  [grid info .view]
 	set button_info [string trim $button_info]
-	set row-col [lindex [split $button_info] 0]
-	set button_row [lindex [split ${row-col} ,] 0]
-	set button_col [lindex [split ${row-col} ,] 1] 
+	set button_row 5 
+	set button_col [lindex  [split $button_info] 5] 
 
-	set addr_col [expr $button_col + $max_mask - $min_mask +2]
-
+	set addr_col [expr $button_col + $max_mask - $min_mask +3]
 
 	for {set row 0} {$row < $subnets} {incr row} {
 	    if {[expr fmod($row,4.0)] == 0} {
 			set address [VLSM_list get_addr .view.$max_mask,$row]
 			set addr_row [expr $button_row + $row]
     		label .subnet_addr_$label_count -text $address -borderwidth 0
-    		table .  .subnet_addr_$label_count $addr_row,$addr_col    \
-											-anchor nw
+    		grid  .subnet_addr_$label_count -row $addr_row -column $addr_col    \
+											-sticky nw
 
 	        incr label_count
 	    }
 	}
 
-	table . \
-			.prefix_label    1,$addr_col \
-			.sel_count_label 2,$addr_col \
-			.host_cnt_label  3,$addr_col
+	grid	.prefix_label    -row 1 -column $addr_col
+	grid	.sel_count_label -row 2 -column $addr_col
+	grid	.host_cnt_label  -row 3 -column $addr_col
 }
 
 #--------------------------------------------------------
@@ -861,19 +854,17 @@ global address
 	set offset 0
 	canvas .view 
 
-	table . \
-			.view [expr $row_offset +1],$col_offset \
+	grid	.view -row [expr $row_offset +1] -column $col_offset \
 				-rowspan [expr 1 << ($max_mask - $min_mask)] \
 				-columnspan [expr $max_mask - $min_mask + 1] \
-				-fill both 
+				-sticky nsew
 
 	for {set col $min_mask} {$col <= $max_mask} {incr col} {
 		set subnets [expr 1 << ($col - $min_mask)]
 
-		table . \
-				.stats_${col}_id [expr $row_offset -3],[expr $col_offset + $offset] \
-				.stats_$col      [expr $row_offset -2],[expr $col_offset + $offset] \
-				.stats_${col}_hosts [expr $row_offset -1],[expr $col_offset + $offset]
+		grid .stats_${col}_id -row [expr $row_offset -3] -column [expr $col_offset + $offset]
+		grid .stats_$col      -row [expr $row_offset -2] -column [expr $col_offset + $offset]
+		grid .stats_${col}_hosts -row [expr $row_offset -1] -column [expr $col_offset + $offset]
 		incr offset
 
 		for {set row 0} {$row < $subnets} {incr row} {
@@ -887,13 +878,14 @@ global address
 				-command "select_subnet .view.$button_id " \
 				-font {times 1}
 
-
-			table .view .view.$button_id \
-				[expr $row * ([expr 1 << ($max_mask -$col)])],[expr $col - $min_mask] \
+puts "view.$button_id : [expr 1 << ($max_mask -$col)]"
+			grid .view.$button_id \
+				-row [expr $row * ([expr 1 << ($max_mask -$col)])] \
+				-column [expr $col - $min_mask] \
 				-rowspan [expr 1 << ($max_mask -$col)] \
-				-fill both
+				-sticky nsew
 			set row_height .15i
-			table configure .view R$row -height $row_height
+			grid rowconfigure .view $row -minsize $row_height
 
 		}
 	  }
@@ -1099,12 +1091,10 @@ proc VLSM_list {op button_id } {
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
 
-package require BLT
-namespace import blt::*
 
 
 Initialize
 Build_GUI
 #Show_Subnet_Grid
 Cleanup selections
-console show
+#console show
