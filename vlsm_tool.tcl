@@ -729,8 +729,9 @@ proc Label_Subnets {} {
 
 	set button_info  [grid info .view]
 	set button_info [string trim $button_info]
-	set button_row 5 
-	set button_col [lindex  [split $button_info] 5] 
+	puts $button_info
+	set button_row [lindex  [split $button_info] 5]
+	set button_col [lindex  [split $button_info] 3] 
 
 	set addr_col [expr $button_col + $max_mask - $min_mask +3]
 
